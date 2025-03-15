@@ -225,14 +225,16 @@ const MatrixRain = () => {
   }
   
   const [columns, setColumns] = useState<MatrixColumn[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     // Initialize columns
     const initialColumns = [];
     for (let i = 0; i < columnCount; i++) {
       initialColumns.push({
         chars: Array(20).fill(undefined).map(() => characters[Math.floor(Math.random() * characters.length)]),
-        x: (window.innerWidth / columnCount) * i,
+        x: (typeof window !== 'undefined' ? window.innerWidth : 1200) / columnCount * i,
         speed: Math.random() * 20 + 10,
         opacity: Math.random() * 0.4 + 0.1
       });
@@ -258,6 +260,8 @@ const MatrixRain = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  if (!isMounted) return null;
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
@@ -501,6 +505,7 @@ export default function HomePage() {
   const [buttonClicked, setButtonClicked] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
   const [matrixVisible, setMatrixVisible] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   const mainContentRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -573,6 +578,10 @@ export default function HomePage() {
       transform: perspective(800px) rotateX(10deg);
     }
   `;
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Add global styles to document
   useEffect(() => {
@@ -660,11 +669,11 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
       {/* Background effects */}
-      {matrixVisible && <MatrixRain />}
+      {isMounted && matrixVisible && <MatrixRain />}
       <GlowingRings />
       <StarField />
-      {showParticles && <CursorParticleEffect />}
-      
+      {isMounted && showParticles && <CursorParticleEffect />}
+
       <div ref={mainContentRef}>
         {/* Hero Section */}
         <motion.section 
@@ -2121,11 +2130,11 @@ ORDER BY
             }}></div>
             
             {/* Floating SQL terms */}
-            {Array.from({ length: 10 }).map((_, i) => (
+            {isMounted && Array.from({ length: 10 }).map((_, i) => (
               <motion.div
                 key={i}
                 initial={{ 
-                  x: Math.random() * window.innerWidth, 
+                  x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200), 
                   y: Math.random() * 300 + 200,
                   opacity: Math.random() * 0.1 + 0.05,
                   rotate: Math.random() * 20 - 10
