@@ -1387,7 +1387,7 @@ export default function HomePage() {
                         <div className="flex items-center text-sm text-gray-400">
                           <UsersIcon className="h-4 w-4 mr-1" /> 15k+ players
                         </div>
-                        <Link href="https://sqlsquidgame.com" target="_blank" rel="noopener noreferrer">
+                        <Link href="/games/squid-game">
                           <Button size="sm" variant="ghost" className="group-hover:bg-purple-900/30 transition-colors flex items-center">
                             Play Now
                             <motion.div
