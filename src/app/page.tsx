@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence, useAnimation, useScroll, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { 
   Card, 
   CardContent, 
@@ -19,8 +19,6 @@ import {
 } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Avatar } from '@/components/ui/avatar';
 import { 
   RocketIcon, 
   GamepadIcon, 
@@ -38,9 +36,7 @@ import {
   SearchIcon,
   CheckIcon,
   KeyIcon,
-  PuzzleIcon,
   TrashIcon,
-  TableIcon,
   HelpCircleIcon,
   ClockIcon
 } from 'lucide-react';
@@ -74,7 +70,7 @@ const dailyChallenges = [
   {
     id: 4,
     title: "Find the Data Anomaly",
-    description: "Something's wrong with the data. Use SQL to identify the corruption pattern.",
+    description: "Something&apos;s wrong with the data. Use SQL to identify the corruption pattern.",
     difficulty: "Medium",
     points: 300,
     icon: <HelpCircleIcon className="h-5 w-5 text-yellow-400" />
@@ -107,7 +103,6 @@ const sqlSnippets = [
 
 // Cursor particle effect component
 const CursorParticleEffect = () => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   interface Particle {
     id: number;
     x: number;
@@ -120,25 +115,9 @@ const CursorParticleEffect = () => {
   const [particles, setParticles] = useState<Particle[]>([]);
   
   useEffect(() => {
-    interface MousePosition {
-      x: number;
-      y: number;
-    }
-
-    interface Particle {
-      id: number;
-      x: number;
-      y: number;
-      size: number;
-      color: string;
-      lifetime: number;
-    }
-
     const updateMousePosition = (e: MouseEvent): void => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-      
       // Add new particle on mouse move
-      if (Math.random() > 0.7) { // Only create particles sometimes for performance
+      if (Math.random() > 0.7) { 
         const newParticle: Particle = {
           id: Date.now(),
           x: e.clientX,
@@ -381,7 +360,17 @@ const FloatingDatabaseIcons = () => {
 // Animated card component with hover effects
 type ColorScheme = 'blue' | 'teal' | 'purple' | 'amber';
 
-const AnimatedCard = ({ children, delay, colorScheme = "blue" as ColorScheme, className = "" }: { children: React.ReactNode; delay: number; colorScheme?: ColorScheme; className?: string }) => {
+const AnimatedCard = ({ 
+  children, 
+  delay, 
+  colorScheme = "blue" as ColorScheme, 
+  className = "" 
+}: { 
+  children: React.ReactNode; 
+  delay: number; 
+  colorScheme?: ColorScheme; 
+  className?: string 
+}) => {
   const baseHoverClasses = "transition-all duration-300 ease-out transform hover:scale-105 hover:shadow-[0_0_25px_rgba(59,130,246,0.5)]";
   const colorSchemes: Record<ColorScheme, string> = {
     blue: "hover:border-blue-400 group-hover:text-blue-300",
@@ -501,7 +490,6 @@ const StarField = () => {
 
 // Main HomePage component
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState('all');
   const [dailyChallenge, setDailyChallenge] = useState(dailyChallenges[0]);
   const [userPoints, setUserPoints] = useState(0);
   const [glowEffect, setGlowEffect] = useState(false);
@@ -586,7 +574,7 @@ export default function HomePage() {
     }
   `;
 
-  // Add global styles to document (now inside the component)
+  // Add global styles to document
   useEffect(() => {
     const styleElement = document.createElement('style');
     styleElement.innerHTML = globalStyles;
@@ -595,7 +583,7 @@ export default function HomePage() {
     return () => {
       document.head.removeChild(styleElement);
     };
-  }, []);
+  }, [globalStyles]);
   
   // Select a random daily challenge
   useEffect(() => {
@@ -618,7 +606,7 @@ export default function HomePage() {
     }, 10000);
     
     return () => clearInterval(tipInterval);
-  }, []);
+  }, [sqlTips.length]);
 
   // Create a glow effect on the SQL logo every few seconds
   useEffect(() => {
@@ -629,49 +617,7 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
   
-  // Animation variants for cards
-  interface CardVariant {
-    opacity: number;
-    y: number;
-    transition?: {
-      delay: number;
-      duration: number;
-      ease: string;
-    }
-  }
-
-  interface CardVariants {
-    hidden: CardVariant;
-    visible: (i: number) => CardVariant;
-  }
-
-  const cardVariants: CardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: (i: number): CardVariant => ({ 
-      opacity: 1, 
-      y: 0, 
-      transition: { 
-        delay: i * 0.1,
-        duration: 0.5,
-        ease: "easeOut"
-      } 
-    })
-  };
-  
   // Function to simulate terminal output
-  interface TerminalOutput {
-    output: string[];
-  }
-
-  interface TerminalCommand {
-    command: string;
-  }
-
-  interface CommandResponse {
-    response: string;
-    points?: number;
-  }
-
   const executeCommand = (command: string): void => {
     setButtonClicked(true);
     setIsTerminalVisible(true);
@@ -1197,11 +1143,7 @@ export default function HomePage() {
               </p>
             </motion.div>
             
-            <Tabs 
-              defaultValue="all" 
-              className="w-full"
-              onValueChange={setActiveTab}
-            >
+            <Tabs defaultValue="all" className="w-full">
               <motion.div 
                 className="flex justify-center mb-12"
                 initial={{ opacity: 0, y: 20 }}
@@ -1698,28 +1640,28 @@ export default function HomePage() {
               {/* Games Tab */}
               <TabsContent value="games" className="mt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {/* Games content here (similar to above but with game-specific cards) */}
+                  {/* You could add more "Game" cards here if you want */}
                 </div>
               </TabsContent>
 
               {/* Tools Tab */}
               <TabsContent value="tools" className="mt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {/* Tools content here */}
+                  {/* You could add more "Tool" cards here if you want */}
                 </div>
               </TabsContent>
 
               {/* Learning Tab */}
               <TabsContent value="learning" className="mt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {/* Learning content here */}
+                  {/* You could add more "Learning" cards here if you want */}
                 </div>
               </TabsContent>
 
               {/* Community Tab */}
               <TabsContent value="community" className="mt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {/* Community content here */}
+                  {/* You could add more "Community" cards here if you want */}
                 </div>
               </TabsContent>
             </Tabs>
@@ -1897,7 +1839,7 @@ ORDER BY
                       >
                         💡
                       </motion.div>
-                      <p className="text-amber-400 italic">Hint: Are you sure you've found ALL the affected customers?</p>
+                      <p className="text-amber-400 italic">Hint: Are you sure you&apos;ve found ALL the affected customers?</p>
                     </div>
                     
                     <div className="mt-6 bg-slate-900/50 p-4 rounded-lg border border-teal-500/20">
@@ -2025,7 +1967,7 @@ ORDER BY
                 >
                   <Counter from={0} to={25} suffix="+" duration={2.5} />
                 </motion.p>
-                <p className="text-lg text-gray-300">SQL Games & Tools</p>
+                <p className="text-lg text-gray-300">SQL Games &amp; Tools</p>
                 <div className="absolute -bottom-4 -right-4 opacity-10 text-7xl">🎮</div>
               </motion.div>
               
@@ -2162,7 +2104,7 @@ ORDER BY
               className="mt-8 text-sm text-gray-400 flex justify-center items-center"
             >
               <CheckIcon className="h-4 w-4 mr-2 text-green-400" />
-              <span>We'll never share your email. Unsubscribe anytime.</span>
+              <span>We&apos;ll never share your email. Unsubscribe anytime.</span>
             </motion.div>
             
             {/* Decorative elements */}
@@ -2417,46 +2359,26 @@ interface CounterProps {
   suffix?: string;
 }
 
-const Counter = ({ from, to, duration = 2, suffix = "" }: CounterProps) => {
+function Counter({ from, to, duration = 2, suffix = "" }: CounterProps) {
   const [count, setCount] = useState(from);
-  const controls = useAnimation();
-  interface AnimationControls {
-    start: () => void;
-    stop: () => void;
-  }
 
-  interface CountProps extends CounterProps {
-    controls: AnimationControls;
-  }
   useEffect(() => {
-    interface AnimationTimestamp {
-      startTime: number | undefined;
-    }
-
     let startTime: number | undefined;
-    interface UpdateCountTimestamp {
-      startTime: number | undefined;
-      timestamp: number;
-    }
-
-    interface AnimationProgress {
-      progress: number;
-      easedProgress: number;
-      currentCount: number;
-    }
-
+    
     const updateCount = (timestamp: number): void => {
-      if (!startTime) startTime = timestamp;
-      const progress: number = Math.min((timestamp - startTime) / (duration * 1000), 1);
+      if (!startTime) {
+        startTime = timestamp;
+      }
+      const progress = Math.min((timestamp - startTime) / (duration * 1000), 1);
       
       // Easing function for smoother animation
-      const easedProgress: number = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-      const currentCount: number = Math.floor(from + (to - from) * easedProgress);
+      const easedProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const currentCount = Math.floor(from + (to - from) * easedProgress);
       
       setCount(currentCount);
       
       if (progress < 1) {
-      requestAnimationFrame(updateCount);
+        requestAnimationFrame(updateCount);
       }
     };
     
@@ -2464,6 +2386,6 @@ const Counter = ({ from, to, duration = 2, suffix = "" }: CounterProps) => {
     
     return () => setCount(from);
   }, [from, to, duration]);
-  
+
   return <span>{count}{suffix}</span>;
-};
+}

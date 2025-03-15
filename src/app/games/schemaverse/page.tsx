@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import {
   Tooltip,
@@ -33,21 +32,17 @@ import {
   TargetIcon,
   CpuIcon,
   GlobeIcon,
-  SunIcon,
-  PlusCircleIcon,
   InfoIcon,
-  SettingsIcon,
   SendIcon,
   XIcon,
   CheckIcon,
   ArrowRightIcon,
   HomeIcon,
-  MenuIcon,
   GamepadIcon,
 } from "lucide-react";
 
 // -----------------------------------------------------------------------
-// 1. Interfaces (single set, no duplicates)
+// 1. Interfaces
 // -----------------------------------------------------------------------
 interface Ship {
   ship_id: number;
@@ -113,7 +108,7 @@ interface GameState {
 interface QueryResult {
   success: boolean;
   message: string;
-  data: any | null;
+  data: unknown[] | null;
   affectedRows: number;
   isChallengeSolved: boolean;
 }
@@ -121,13 +116,13 @@ interface QueryResult {
 // -----------------------------------------------------------------------
 // 2. Game Constants, Setup, and Shared Data
 // -----------------------------------------------------------------------
-const GRID_SIZE = 20; // Size of the space grid
-const INITIAL_SHIPS = 3; // Starting number of ships
-const INITIAL_RESOURCES = 1000; // Starting resources
-const STAR_COUNT = 25; // Number of stars in the background
-const PLANET_COUNT = 5; // Number of planets
-const ASTEROID_COUNT = 8; // Number of asteroid fields
-const ENEMY_COUNT = 10; // Number of enemy ships
+const GRID_SIZE = 20;
+const INITIAL_SHIPS = 3;
+const INITIAL_RESOURCES = 1000;
+const STAR_COUNT = 25;
+const PLANET_COUNT = 5;
+const ASTEROID_COUNT = 8;
+const ENEMY_COUNT = 10;
 
 const SHIP_TYPES = {
   SCOUT: {
@@ -159,7 +154,7 @@ const SHIP_TYPES = {
   },
 };
 
-// SQL challenges for the game
+// SQL challenges
 const SQL_CHALLENGES = [
   {
     id: "move_ship",
@@ -227,12 +222,12 @@ const TUTORIAL_STEPS = [
   {
     title: "Welcome to Schemaverse!",
     content:
-      "In this game, you'll command a fleet of spaceships using SQL queries. Let's learn how to play!",
+      "In this game, you&#39;ll command a fleet of spaceships using SQL queries. Let&#39;s learn how to play!",
   },
   {
     title: "Understanding the Universe",
     content:
-      "The game takes place on a grid representing space. You'll see your ships, enemy ships, planets, and asteroids.",
+      "The game takes place on a grid representing space. You&#39;ll see your ships, enemy ships, planets, and asteroids.",
   },
   {
     title: "Managing Your Fleet",
@@ -262,11 +257,11 @@ const TUTORIAL_STEPS = [
   {
     title: "Ready to Play?",
     content:
-      "Now it's your turn! Start with the first challenge and work your way up to become a Schemaverse master!",
+      "Now it&#39;s your turn! Start with the first challenge and work your way up to become a Schemaverse master!",
   },
 ];
 
-// Game database schema (for reference in the Help modal)
+// Game database schema (for reference in Help)
 const GAME_SCHEMA = [
   {
     table: "my_ships",
@@ -378,7 +373,7 @@ const GAME_SCHEMA = [
   },
 ];
 
-// Basic SQL commands reference for help panel
+// Basic SQL commands reference
 const SQL_COMMANDS = [
   {
     command: "SELECT",
@@ -393,7 +388,8 @@ const SQL_COMMANDS = [
   {
     command: "INSERT",
     description: "Add new data to a table",
-    example: "INSERT INTO my_ships (ship_type, position_x, position_y) VALUES ('SCOUT', 5, 5);",
+    example:
+      "INSERT INTO my_ships (ship_type, position_x, position_y) VALUES (&#39;SCOUT&#39;, 5, 5);",
   },
   {
     command: "DELETE",
@@ -418,7 +414,6 @@ const SQL_COMMANDS = [
 // 3. Initial Game State Generator
 // -----------------------------------------------------------------------
 const generateInitialGameState = (): GameState => {
-  // Generate player ships
   const playerShips: Ship[] = [];
   for (let i = 0; i < INITIAL_SHIPS; i++) {
     const shipType = i === 0 ? "SCOUT" : i === 1 ? "DESTROYER" : "BATTLESHIP";
@@ -435,7 +430,6 @@ const generateInitialGameState = (): GameState => {
     });
   }
 
-  // Generate enemy ships
   const enemyShips: EnemyShip[] = [];
   for (let i = 0; i < ENEMY_COUNT; i++) {
     const shipType = i % 3 === 0 ? "SCOUT" : i % 3 === 1 ? "DESTROYER" : "BATTLESHIP";
@@ -450,42 +444,38 @@ const generateInitialGameState = (): GameState => {
     });
   }
 
-  // Generate planets
   const planets: Planet[] = [];
   for (let i = 0; i < PLANET_COUNT; i++) {
     planets.push({
       planet_id: i + 1,
       position_x: Math.floor(Math.random() * GRID_SIZE),
       position_y: Math.floor(Math.random() * GRID_SIZE),
-      size: Math.floor(Math.random() * 3) + 1, // 1 to 3
-      resource_multiplier: parseFloat((Math.random() * 1.5 + 0.5).toFixed(1)), // 0.5 to 2.0
+      size: Math.floor(Math.random() * 3) + 1,
+      resource_multiplier: parseFloat((Math.random() * 1.5 + 0.5).toFixed(1)),
     });
   }
 
-  // Generate asteroids
   const asteroids: Asteroid[] = [];
   for (let i = 0; i < ASTEROID_COUNT; i++) {
     asteroids.push({
       asteroid_id: i + 1,
       position_x: Math.floor(Math.random() * GRID_SIZE),
       position_y: Math.floor(Math.random() * GRID_SIZE),
-      resource_value: Math.floor(Math.random() * 500) + 100, // 100 to 600
+      resource_value: Math.floor(Math.random() * 500) + 100,
     });
   }
 
-  // Generate stars (just for background visuals)
   const stars: Star[] = [];
   for (let i = 0; i < STAR_COUNT; i++) {
     stars.push({
       id: i,
-      position_x: Math.random() * 100, // Percentage
-      position_y: Math.random() * 100, // Percentage
-      size: Math.random() * 2 + 0.5, // 0.5 to 2.5
-      brightness: Math.random() * 0.5 + 0.5, // 0.5 to 1.0
+      position_x: Math.random() * 100,
+      position_y: Math.random() * 100,
+      size: Math.random() * 2 + 0.5,
+      brightness: Math.random() * 0.5 + 0.5,
     });
   }
 
-  // Return the full initial state
   return {
     playerShips,
     enemyShips,
@@ -506,15 +496,24 @@ const generateInitialGameState = (): GameState => {
 // -----------------------------------------------------------------------
 // 4. Simple SQL Parser + Query Handlers
 // -----------------------------------------------------------------------
-const executeQuery = (
+
+// Helper to get a dynamic field value from an object
+function getFieldValue(
+  item: Record<string, unknown>,
+  field: string
+): unknown {
+  return item[field];
+}
+
+function executeQuery(
   query: string,
   gameState: GameState,
   setGameState: (s: GameState) => void,
   activeChallengeId: string | null = null
-): QueryResult => {
+): QueryResult {
   const normalizedQuery = query.trim().toLowerCase().replace(/\s+/g, " ");
 
-  let results: QueryResult = {
+  const results: QueryResult = {
     success: false,
     message: "Query executed but nothing happened.",
     data: null,
@@ -523,22 +522,24 @@ const executeQuery = (
   };
 
   try {
-    // Check command type
+    let finalResult: QueryResult;
+
     if (normalizedQuery.startsWith("select")) {
-      results = handleSelectQuery(normalizedQuery, gameState);
+      finalResult = handleSelectQuery(normalizedQuery, gameState);
     } else if (normalizedQuery.startsWith("update")) {
-      results = handleUpdateQuery(normalizedQuery, gameState, setGameState);
+      finalResult = handleUpdateQuery(normalizedQuery, gameState, setGameState);
     } else if (normalizedQuery.startsWith("insert")) {
-      results = handleInsertQuery(normalizedQuery, gameState, setGameState);
+      finalResult = handleInsertQuery(normalizedQuery, gameState, setGameState);
     } else if (normalizedQuery.startsWith("delete")) {
-      results = handleDeleteQuery(normalizedQuery, gameState, setGameState);
+      finalResult = handleDeleteQuery(normalizedQuery, gameState, setGameState);
     } else {
-      results.message =
-        "Unrecognized SQL command. Try SELECT, UPDATE, INSERT, or DELETE.";
-      return results;
+      return {
+        ...results,
+        message: "Unrecognized SQL command. Try SELECT, UPDATE, INSERT, or DELETE.",
+      };
     }
 
-    // Check if the current challenge was solved
+    // Check challenge
     if (activeChallengeId) {
       const activeChallenge = SQL_CHALLENGES.find((c) => c.id === activeChallengeId);
       if (activeChallenge) {
@@ -546,13 +547,11 @@ const executeQuery = (
           .trim()
           .toLowerCase()
           .replace(/\s+/g, " ");
+        // naive check
+        if (finalResult.success && normalizedQuery.includes(normalizedSolution.split(";")[0])) {
+          finalResult.isChallengeSolved = true;
+          finalResult.message = activeChallenge.successMessage;
 
-        // Very naive check: see if the user's query contains the first part of the challenge solution
-        if (normalizedQuery.includes(normalizedSolution.split(";")[0])) {
-          results.isChallengeSolved = true;
-          results.message = activeChallenge.successMessage;
-
-          // Update game state with challenge completion and score
           const newState = {
             ...gameState,
             score: gameState.score + activeChallenge.points,
@@ -566,31 +565,31 @@ const executeQuery = (
       }
     }
 
-    // Process a game turn after each successful query
-    if (results.success) {
+    // Process turn
+    if (finalResult.success) {
       processGameTurn(gameState, setGameState);
     }
-    return results;
-  } catch (error: any) {
+
+    return finalResult;
+  } catch (error: unknown) {
+    let errorMessage = "Unknown error";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
     return {
       success: false,
-      message: `Error executing query: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`,
+      message: `Error executing query: ${errorMessage}`,
       data: null,
       affectedRows: 0,
       isChallengeSolved: false,
     };
   }
-};
+}
 
 // SELECT
-const handleSelectQuery = (
-  query: string,
-  gameState: GameState
-): QueryResult => {
+function handleSelectQuery(query: string, gameState: GameState): QueryResult {
   const { playerShips, enemyShips, planets, asteroids, resources } = gameState;
-  let data: any[] | null = null;
+  let data: unknown[] | null = null;
 
   if (query.includes("from my_ships")) {
     data = playerShips;
@@ -604,7 +603,6 @@ const handleSelectQuery = (
     data = [resources];
   }
 
-  // Very simple WHERE parsing
   if (data && query.includes("where")) {
     const whereClause = query.split("where")[1].trim();
     if (whereClause.includes("=")) {
@@ -612,12 +610,16 @@ const handleSelectQuery = (
       const numValue = parseFloat(rawValue);
 
       if (!isNaN(numValue)) {
-        data = data.filter((item) => item[field] === numValue);
+        data = data.filter((item) => {
+          const val = getFieldValue(item as Record<string, unknown>, field);
+          return val === numValue;
+        });
       } else {
         const strValue = rawValue.replace(/['"`]/g, "");
-        data = data.filter(
-          (item) => String(item[field]).toLowerCase() === strValue
-        );
+        data = data.filter((item) => {
+          const val = getFieldValue(item as Record<string, unknown>, field);
+          return String(val).toLowerCase() === strValue;
+        });
       }
     }
   }
@@ -629,18 +631,17 @@ const handleSelectQuery = (
     affectedRows: 0,
     isChallengeSolved: false,
   };
-};
+}
 
 // UPDATE
-const handleUpdateQuery = (
+function handleUpdateQuery(
   query: string,
   gameState: GameState,
   setGameState: (s: GameState) => void
-): QueryResult => {
-  let { playerShips, enemyShips, planets, asteroids, resources } = gameState;
+): QueryResult {
+  const { playerShips, enemyShips, planets, asteroids, resources } = gameState;
   let affectedRows = 0;
 
-  // Which table?
   let table: string | null = null;
   if (query.includes("update my_ships")) {
     table = "my_ships";
@@ -664,7 +665,6 @@ const handleUpdateQuery = (
     };
   }
 
-  // Extract SET clause
   let setClause = "";
   if (query.includes("set")) {
     const parts = query.split("set")[1].split("where");
@@ -681,7 +681,6 @@ const handleUpdateQuery = (
     };
   }
 
-  // Parse assignments
   const assignments: Record<string, string | number> = {};
   setClause.split(",").forEach((assignment) => {
     const [fieldRaw, valueRaw] = assignment.split("=").map((s) => s.trim());
@@ -693,23 +692,23 @@ const handleUpdateQuery = (
     }
   });
 
-  // Extract WHERE condition
-  let whereCondition: ((item: any) => boolean) | null = null;
+  let whereCondition: ((item: unknown) => boolean) | null = null;
   if (query.includes("where")) {
     const whereClause = query.split("where")[1].trim();
     if (whereClause.includes("=")) {
       const [fieldRaw, valueRaw] = whereClause.split("=").map((s) => s.trim());
       const numValue = parseFloat(valueRaw);
       if (!isNaN(numValue)) {
-        whereCondition = (item) => item[fieldRaw] === numValue;
+        whereCondition = (item) => getFieldValue(item as unknown as Record<string, unknown>, fieldRaw) === numValue;
       } else {
         const strValue = valueRaw.replace(/['"`]/g, "");
-        whereCondition = (item) => String(item[fieldRaw]).toLowerCase() === strValue;
+        whereCondition = (item) =>
+          String(getFieldValue(item as unknown as Record<string, unknown>, fieldRaw)).toLowerCase() === strValue;
       }
     }
   }
 
-  let newState = { ...gameState };
+  const newState = { ...gameState };
 
   if (table === "my_ships") {
     newState.playerShips = playerShips.map((ship) => {
@@ -744,7 +743,6 @@ const handleUpdateQuery = (
       return asteroid;
     });
   } else if (table === "my_resources") {
-    // Single object
     if (!whereCondition || whereCondition(resources)) {
       affectedRows++;
       newState.resources = { ...resources, ...assignments };
@@ -760,15 +758,15 @@ const handleUpdateQuery = (
     affectedRows,
     isChallengeSolved: false,
   };
-};
+}
 
 // INSERT
-const handleInsertQuery = (
+function handleInsertQuery(
   query: string,
   gameState: GameState,
   setGameState: (s: GameState) => void
-): QueryResult => {
-  let { playerShips, resources } = gameState;
+): QueryResult {
+  const { playerShips, resources } = gameState;
 
   if (!query.includes("insert into my_ships")) {
     return {
@@ -780,7 +778,6 @@ const handleInsertQuery = (
     };
   }
 
-  // Identify ship type
   let shipType: "SCOUT" | "DESTROYER" | "BATTLESHIP" | null = null;
   if (query.includes("'scout'") || query.includes('"scout"')) {
     shipType = "SCOUT";
@@ -811,7 +808,6 @@ const handleInsertQuery = (
     };
   }
 
-  // Parse position
   let position_x = 0;
   let position_y = 0;
 
@@ -832,7 +828,6 @@ const handleInsertQuery = (
     range: shipStats.range,
   };
 
-  // Update state
   setGameState({
     ...gameState,
     playerShips: [...playerShips, newShip],
@@ -840,25 +835,25 @@ const handleInsertQuery = (
       ...resources,
       credits: resources.credits - shipCost,
     },
-    score: gameState.score + 50, // Bonus
+    score: gameState.score + 50,
   });
 
   return {
     success: true,
     message: `Successfully purchased and deployed a new ${shipType}!`,
-    data: newShip,
+    data: [newShip],
     affectedRows: 1,
     isChallengeSolved: false,
   };
-};
+}
 
 // DELETE
-const handleDeleteQuery = (
+function handleDeleteQuery(
   query: string,
   gameState: GameState,
   setGameState: (s: GameState) => void
-): QueryResult => {
-  let { playerShips } = gameState;
+): QueryResult {
+  const { playerShips } = gameState;
 
   if (!query.includes("delete from my_ships")) {
     return {
@@ -878,12 +873,18 @@ const handleDeleteQuery = (
     if (whereClause.includes("=")) {
       const [fieldRaw, valueRaw] = whereClause.split("=").map((s) => s.trim());
       const numValue = parseFloat(valueRaw);
+
       if (!isNaN(numValue)) {
-        whereCondition = (ship) => (ship as any)[fieldRaw] === numValue;
+        whereCondition = (ship) => {
+          const val = getFieldValue(ship as unknown as Record<string, unknown>, fieldRaw);
+          return val === numValue;
+        };
       } else {
         const strValue = valueRaw.replace(/['"`]/g, "");
-        whereCondition = (ship) =>
-          String((ship as any)[fieldRaw]).toLowerCase() === strValue;
+        whereCondition = (ship) => {
+          const val = getFieldValue(ship as unknown as Record<string, unknown>, fieldRaw);
+          return String(val).toLowerCase() === strValue;
+        };
       }
     }
   }
@@ -900,7 +901,9 @@ const handleDeleteQuery = (
     affectedRows = playerShips.length;
   }
 
-  if (!whereCondition) newPlayerShips = [];
+  if (!whereCondition) {
+    newPlayerShips = [];
+  }
 
   setGameState({
     ...gameState,
@@ -914,20 +917,27 @@ const handleDeleteQuery = (
     affectedRows,
     isChallengeSolved: false,
   };
-};
+}
 
 // -----------------------------------------------------------------------
-// 5. Game Turn Processing (AI, resource auto-collection, etc.)
+// 5. Game Turn Processing
 // -----------------------------------------------------------------------
-const processGameTurn = (gameState: GameState, setGameState: (s: GameState) => void): number => {
-  const { playerShips, enemyShips, planets, asteroids, resources, turnsCompleted } = gameState;
+function processGameTurn(gameState: GameState, setGameState: (s: GameState) => void): number {
+  const {
+    playerShips,
+    enemyShips,
+    planets,
+    asteroids,
+    resources,
+    turnsCompleted,
+    score,
+  } = gameState;
 
-  let newResources = { ...resources };
+  const newResources = { ...resources };
   let newPlayerShips = [...playerShips];
   let newEnemyShips = [...enemyShips];
   let scoreIncrease = 0;
 
-  // Auto-collect from asteroids + resource bonuses
   playerShips.forEach((ship) => {
     asteroids.forEach((asteroid) => {
       const distance = Math.sqrt(
@@ -940,7 +950,6 @@ const processGameTurn = (gameState: GameState, setGameState: (s: GameState) => v
       }
     });
 
-    // Bonus from planets
     planets.forEach((planet) => {
       const distance = Math.sqrt(
         Math.pow(ship.position_x - planet.position_x, 2) +
@@ -953,16 +962,14 @@ const processGameTurn = (gameState: GameState, setGameState: (s: GameState) => v
       }
     });
 
-    // Enemy ships AI: move + attack
     newEnemyShips = newEnemyShips.map((enemy) => {
       if (enemy.health <= 0) return enemy;
       const distance = Math.sqrt(
         Math.pow(ship.position_x - enemy.position_x, 2) +
           Math.pow(ship.position_y - enemy.position_y, 2)
       );
-
       const updatedEnemy = { ...enemy };
-      // Attack if in range
+
       if (distance <= 2) {
         const shipIndex = newPlayerShips.findIndex((s) => s.ship_id === ship.ship_id);
         if (shipIndex >= 0) {
@@ -971,9 +978,7 @@ const processGameTurn = (gameState: GameState, setGameState: (s: GameState) => v
             health: newPlayerShips[shipIndex].health - enemy.attack,
           };
         }
-      }
-      // Move enemy every 3 turns
-      else if (turnsCompleted % 3 === 0) {
+      } else if (turnsCompleted % 3 === 0) {
         const dx = ship.position_x - enemy.position_x;
         const dy = ship.position_y - enemy.position_y;
         if (Math.abs(dx) > Math.abs(dy)) {
@@ -985,7 +990,6 @@ const processGameTurn = (gameState: GameState, setGameState: (s: GameState) => v
       return updatedEnemy;
     });
 
-    // Player ships attack if enemy is in range
     enemyShips.forEach((enemy) => {
       if (enemy.health <= 0) return;
       const distance = Math.sqrt(
@@ -1002,35 +1006,32 @@ const processGameTurn = (gameState: GameState, setGameState: (s: GameState) => v
           };
           scoreIncrease += Math.floor(damage);
           if (newEnemyShips[enemyIndex].health <= 0) {
-            scoreIncrease += 100; // Extra for kill
+            scoreIncrease += 100;
           }
         }
       }
     });
   });
 
-  // Remove destroyed player ships
   newPlayerShips = newPlayerShips.filter((ship) => ship.health > 0);
 
-  // Update state
   setGameState({
     ...gameState,
     playerShips: newPlayerShips,
     enemyShips: newEnemyShips,
     resources: newResources,
-    score: gameState.score + scoreIncrease,
+    score: score + scoreIncrease,
     turnsCompleted: turnsCompleted + 1,
   });
 
-  // Return how many enemies were destroyed
   const destroyedEnemies =
     enemyShips.filter((e) => e.health > 0).length -
     newEnemyShips.filter((e) => e.health > 0).length;
   return destroyedEnemies;
-};
+}
 
 // -----------------------------------------------------------------------
-// 6. Individual Components (Ship, Planet, Asteroid, Star, etc.)
+// 6. Individual Components
 // -----------------------------------------------------------------------
 const ShipComponent = ({
   ship,
@@ -1156,13 +1157,7 @@ const PlanetComponent = ({ planet, size = 10 }: { planet: Planet; size?: number 
   );
 };
 
-const AsteroidComponent = ({
-  asteroid,
-  size = 6,
-}: {
-  asteroid: Asteroid;
-  size?: number;
-}) => {
+const AsteroidComponent = ({ asteroid, size = 6 }: { asteroid: Asteroid; size?: number }) => {
   return (
     <motion.div
       className="absolute flex items-center justify-center"
@@ -1306,7 +1301,6 @@ const SchemaversePage = () => {
         duration: 5000,
       });
 
-      // Update high score
       if (gameState.score > highScore) {
         setHighScore(gameState.score);
         if (typeof window !== "undefined") {
@@ -1314,7 +1308,6 @@ const SchemaversePage = () => {
         }
       }
 
-      // Add to history (keep at most 10)
       setGameHistory((prev) => [
         {
           date: new Date().toLocaleString(),
@@ -1325,7 +1318,15 @@ const SchemaversePage = () => {
         ...prev.slice(0, 9),
       ]);
     }
-  }, [gameState.playerShips.length]);
+    // Include all dependencies that might change the effect's logic
+  }, [
+    gameState.playerShips.length,
+    gameState.turnsCompleted,
+    gameState.score,
+    gameState.enemyShips,
+    highScore,
+    gameState,
+  ]);
 
   // Execute user query
   const handleExecuteQuery = () => {
@@ -1357,8 +1358,8 @@ const SchemaversePage = () => {
     }
   };
 
-  // Simple highlighting for the code samples in the Help tab
-  const highlightSql = (sql: string) => {
+  // Simple highlighting for code samples
+  function highlightSql(sql: string): string {
     const keywords = [
       "SELECT",
       "UPDATE",
@@ -1383,7 +1384,6 @@ const SchemaversePage = () => {
       );
     });
 
-    // Highlight table names
     const tables = ["my_ships", "enemy_ships", "planets", "asteroids", "my_resources"];
     tables.forEach((table) => {
       highlighted = highlighted.replace(
@@ -1405,7 +1405,7 @@ const SchemaversePage = () => {
     );
 
     return highlighted;
-  };
+  }
 
   // Reset the entire game
   const handleResetGame = () => {
@@ -1600,9 +1600,7 @@ const SchemaversePage = () => {
                             <Badge className="bg-amber-600">{challenge.points} pts</Badge>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-400 mt-1">
-                          {challenge.description}
-                        </p>
+                        <p className="text-sm text-gray-400 mt-1">{challenge.description}</p>
                       </div>
                     );
                   })}
@@ -1696,32 +1694,41 @@ const SchemaversePage = () => {
                       <p className="text-sm">{queryResult.message}</p>
                     </div>
 
-                    {queryResult.data && Array.isArray(queryResult.data) && queryResult.data.length > 0 && (
-                      <div className="mt-3 bg-slate-800 rounded-md p-2 overflow-auto max-h-40">
-                        <table className="w-full text-xs">
-                          <thead>
-                            <tr className="border-b border-slate-700">
-                              {Object.keys(queryResult.data[0]).map((key) => (
-                                <th key={key} className="px-2 py-1 text-left text-gray-400">
-                                  {key}
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {queryResult.data.map((row: any, i: number) => (
-                              <tr key={i} className="border-b border-slate-700/50">
-                                {Object.values(row).map((value, j) => (
-                                  <td key={j} className="px-2 py-1">
-                                    {value !== null && value !== undefined ? value.toString() : "NULL"}
-                                  </td>
-                                ))}
+                    {queryResult.data &&
+                      Array.isArray(queryResult.data) &&
+                      queryResult.data.length > 0 && (
+                        <div className="mt-3 bg-slate-800 rounded-md p-2 overflow-auto max-h-40">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="border-b border-slate-700">
+                                {Object.keys(queryResult.data[0] as Record<string, unknown>).map(
+                                  (key) => (
+                                    <th key={key} className="px-2 py-1 text-left text-gray-400">
+                                      {key}
+                                    </th>
+                                  )
+                                )}
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
+                            </thead>
+                            <tbody>
+                              {queryResult.data.map((row, i) => {
+                                const rowObj = row as Record<string, unknown>;
+                                return (
+                                  <tr key={i} className="border-b border-slate-700/50">
+                                    {Object.values(rowObj).map((value, j) => (
+                                      <td key={j} className="px-2 py-1">
+                                        {value !== null && value !== undefined
+                                          ? String(value)
+                                          : "NULL"}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
                   </div>
                 )}
               </div>
@@ -1769,7 +1776,7 @@ const SchemaversePage = () => {
                       ))}
                     </div>
 
-                    {/* Grid Lines (for visual reference) */}
+                    {/* Grid Lines */}
                     <div className="absolute inset-0 grid grid-cols-10 grid-rows-10 pointer-events-none">
                       {[...Array(10)].map((_, i) => (
                         <React.Fragment key={i}>
@@ -1793,7 +1800,6 @@ const SchemaversePage = () => {
                           size={16}
                         />
                       ))}
-
                       {/* Asteroids */}
                       {gameState.asteroids.map((asteroid) => (
                         <AsteroidComponent
@@ -1801,7 +1807,6 @@ const SchemaversePage = () => {
                           asteroid={asteroid}
                         />
                       ))}
-
                       {/* Enemy Ships */}
                       {gameState.enemyShips
                         .filter((ship) => ship.health > 0)
@@ -1813,7 +1818,6 @@ const SchemaversePage = () => {
                             size={12}
                           />
                         ))}
-
                       {/* Player Ships */}
                       {gameState.playerShips.map((ship) => (
                         <ShipComponent key={`ship-${ship.ship_id}`} ship={ship} size={14} />
@@ -2085,10 +2089,9 @@ const SchemaversePage = () => {
                             </span>
                           </div>
                           <Progress
-                              value={(gameState.resources.credits / 5000) * 100}
-                              className="h-2 bg-slate-700"
-                              color="bg-green-500"
-                            />
+                            value={(gameState.resources.credits / 5000) * 100}
+                            className="h-2 bg-slate-700 [&>div]:bg-green-500"
+                          />
                         </div>
 
                         <div className="flex flex-col">
@@ -2099,10 +2102,9 @@ const SchemaversePage = () => {
                             </span>
                           </div>
                           <Progress
-                              value={(gameState.resources.fuel / 200) * 100}
-                              className="h-2 bg-slate-700"
-                              color="bg-blue-500"
-                            />
+                            value={(gameState.resources.fuel / 200) * 100}
+                            className="h-2 bg-slate-700 [&>div]:bg-blue-500"
+                          />
                         </div>
 
                         <div className="flex flex-col">
@@ -2113,10 +2115,9 @@ const SchemaversePage = () => {
                             </span>
                           </div>
                           <Progress
-                              value={(gameState.resources.materials / 500) * 100}
-                              className="h-2 bg-slate-700"
-                              color="bg-purple-500"
-                            />
+                            value={(gameState.resources.materials / 500) * 100}
+                            className="h-2 bg-slate-700 [&>div]:bg-purple-500"
+                          />
                         </div>
                       </div>
                     </div>
@@ -2240,7 +2241,12 @@ const SchemaversePage = () => {
               </div>
 
               <div className="mb-6">
-                <p className="text-gray-300">{TUTORIAL_STEPS[tutorialStep].content}</p>
+                <p
+                  className="text-gray-300"
+                  dangerouslySetInnerHTML={{
+                    __html: TUTORIAL_STEPS[tutorialStep].content,
+                  }}
+                />
               </div>
 
               <div className="flex justify-between">
@@ -2320,7 +2326,7 @@ const SchemaversePage = () => {
                 </Button>
               </div>
 
-              <Tabs defaultValue={helpTab} onValueChange={setHelpTab}>
+              <Tabs value={helpTab} onValueChange={setHelpTab}>
                 <TabsList className="bg-slate-800 mb-4">
                   <TabsTrigger value="schema" className="data-[state=active]:bg-blue-700">
                     <DatabaseIcon className="w-4 h-4 mr-1" />
@@ -2386,7 +2392,7 @@ const SchemaversePage = () => {
                   <div className="space-y-6">
                     <p className="text-gray-300 mb-4">
                       In Schemaverse, you control your fleet using SQL commands. Here are
-                      the main SQL commands you'll need:
+                      the main SQL commands you&#39;ll need:
                     </p>
 
                     {SQL_COMMANDS.map((cmd) => (
@@ -2440,7 +2446,7 @@ const SchemaversePage = () => {
                             />
                           </div>
                           <p className="text-sm text-gray-400">
-                            Deal damage to an enemy ship using your ship's attack power.
+                            Deal damage to an enemy ship using your ship&#39;s attack power.
                           </p>
                         </div>
 
@@ -2452,7 +2458,7 @@ const SchemaversePage = () => {
                             <div
                               dangerouslySetInnerHTML={{
                                 __html: highlightSql(
-                                  "INSERT INTO my_ships (ship_type, position_x, position_y) VALUES ('SCOUT', 5, 5);"
+                                  "INSERT INTO my_ships (ship_type, position_x, position_y) VALUES (&#39;SCOUT&#39;, 5, 5);"
                                 ),
                               }}
                             />
@@ -2488,7 +2494,7 @@ const SchemaversePage = () => {
                   <div className="space-y-6">
                     <p className="text-gray-300 mb-4">
                       Schemaverse is a space strategy game where you command a fleet of
-                      ships using SQL queries. Here's how to play:
+                      ships using SQL queries. Here&#39;s how to play:
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2567,7 +2573,7 @@ const SchemaversePage = () => {
                       <div className="bg-slate-800 rounded-md p-4">
                         <h3 className="text-lg font-semibold text-blue-400 flex items-center mb-3">
                           <TrophyIcon className="w-5 h-5 mr-2" />
-                          Scoring & Objectives
+                          Scoring &amp; Objectives
                         </h3>
 
                         <div className="space-y-3 text-sm">
