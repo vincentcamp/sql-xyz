@@ -1523,7 +1523,7 @@ export default function HomePage() {
                         <div className="flex items-center text-sm text-gray-400">
                           <UsersIcon className="h-4 w-4 mr-1" /> 10k+ players
                         </div>
-                        <Link href="https://schemaverse.com" target="_blank" rel="noopener noreferrer">
+                        <Link href="/games/schemaverse">
                           <Button size="sm" variant="ghost" className="group-hover:bg-purple-900/30 transition-colors flex items-center">
                             Play Now
                             <motion.div
